@@ -55,7 +55,6 @@ impl std::fmt::Display for GuardianSet {
 
 /// BridgeData extracted from wormhole bridge account, due to no API.
 #[derive(borsh::BorshDeserialize)]
-#[allow(dead_code)]
 pub struct BridgeData {
     pub guardian_set_index: u32,
     pub last_lamports:      u64,
@@ -64,7 +63,6 @@ pub struct BridgeData {
 
 /// BridgeConfig extracted from wormhole bridge account, due to no API.
 #[derive(borsh::BorshDeserialize)]
-#[allow(dead_code)]
 pub struct BridgeConfig {
     pub guardian_set_expiration_time: u32,
     pub fee:                          u64,

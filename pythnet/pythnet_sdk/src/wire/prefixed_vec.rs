@@ -1,16 +1,9 @@
 use {
-    borsh::{
-        BorshDeserialize,
-        BorshSerialize,
-    },
+    borsh::{BorshDeserialize, BorshSerialize},
     serde::{
         de::DeserializeSeed,
-        ser::{
-            SerializeSeq,
-            SerializeStruct,
-        },
-        Deserialize,
-        Serialize,
+        ser::{SerializeSeq, SerializeStruct},
+        Deserialize, Serialize,
     },
 };
 
@@ -36,7 +29,7 @@ where
 
 struct PrefixlessSeed<T> {
     __phantom: std::marker::PhantomData<T>,
-    len:       usize,
+    len: usize,
 }
 
 /// We implement DeserializeSeed for PrefixlessSeed which is aware of the len that should be read
@@ -54,7 +47,7 @@ where
         deserializer: D,
     ) -> Result<Self::Value, D::Error> {
         struct PrefixlessVecVisitor<T> {
-            len:       usize,
+            len: usize,
             __phantom: std::marker::PhantomData<T>,
         }
 
@@ -88,7 +81,7 @@ where
         deserializer.deserialize_tuple(
             self.len,
             PrefixlessVecVisitor {
-                len:       self.len,
+                len: self.len,
                 __phantom: std::marker::PhantomData,
             },
         )
@@ -108,14 +101,14 @@ where
 #[derive(Clone, Debug, Hash, PartialEq, PartialOrd, BorshDeserialize, BorshSerialize)]
 pub struct PrefixedVec<L, T> {
     __phantom: std::marker::PhantomData<L>,
-    data:      PrefixlessVec<T>,
+    data: PrefixlessVec<T>,
 }
 
 impl<L, T> From<Vec<T>> for PrefixedVec<L, T> {
     fn from(data: Vec<T>) -> Self {
         Self {
             __phantom: std::marker::PhantomData,
-            data:      PrefixlessVec { inner: data },
+            data: PrefixlessVec { inner: data },
         }
     }
 }
@@ -142,7 +135,7 @@ impl<L, T> IntoIterator for PrefixedVec<L, T> {
 }
 
 impl<L, T> PrefixedVec<L, T> {
-    pub fn iter(&self) -> std::slice::Iter<T> {
+    pub fn iter(&self) -> std::slice::Iter<'_, T> {
         self.data.inner.iter()
     }
 }
@@ -173,13 +166,6 @@ where
 {
     #[inline]
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        #[derive(Deserialize)]
-        #[serde(field_identifier, rename_all = "lowercase")]
-        enum Field {
-            Len,
-            Data,
-        }
-
         struct PrefixedVecVisitor<L, T> {
             __phantom: std::marker::PhantomData<(L, T)>,
         }

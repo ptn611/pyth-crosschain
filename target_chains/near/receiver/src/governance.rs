@@ -520,8 +520,7 @@ impl Pyth {
 }
 
 impl Pyth {
-    #[allow(dead_code)]
-    fn is_valid_governance_source(&self, source: &Source) -> Result<(), Error> {
+        fn is_valid_governance_source(&self, source: &Source) -> Result<(), Error> {
         (self.gov_source == *source)
             .then_some(())
             .ok_or(UnknownSource(source.emitter))

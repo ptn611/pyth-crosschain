@@ -1,19 +1,9 @@
-pub use pythnet_sdk::messages::{
-    FeedId,
-    PriceFeedMessage,
-};
+pub use pythnet_sdk::messages::{FeedId, PriceFeedMessage};
 use {
-    crate::{
-        check,
-        error::GetPriceError,
-    },
-    anchor_lang::prelude::{
-        borsh::BorshSchema,
-        *,
-    },
+    crate::{check, error::GetPriceError},
+    anchor_lang::prelude::{borsh::BorshSchema, *},
     solana_program::pubkey::Pubkey,
 };
-
 
 /// Pyth price updates are bridged to all blockchains via Wormhole.
 /// Using the price updates on another chain requires verifying the signatures of the Wormhole guardians.
@@ -26,10 +16,60 @@ use {
 ///
 /// # Warning
 /// Using partially verified price updates is dangerous, as it lowers the threshold of guardians that need to collude to produce a malicious price update.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, BorshSchema, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Debug)]
 pub enum VerificationLevel {
     Partial { num_signatures: u8 },
     Full,
+}
+
+impl BorshSchema for VerificationLevel {
+    fn add_definitions_recursively(
+        definitions: &mut std::collections::HashMap<
+            borsh::schema::Declaration,
+            borsh::schema::Definition,
+        >,
+    ) {
+        let variant_partial = (
+            "Partial".to_string(),
+            borsh::schema::Declaration::from("VerificationLevel_Partial"),
+        );
+        let variant_full = (
+            "Full".to_string(),
+            borsh::schema::Declaration::from("VerificationLevel_Full"),
+        );
+
+        <u8 as BorshSchema>::add_definitions_recursively(definitions);
+
+        let definition = borsh::schema::Definition::Enum {
+            variants: vec![variant_partial, variant_full],
+        };
+        Self::add_definition(Self::declaration(), definition, definitions);
+
+        let definition = borsh::schema::Definition::Struct {
+            fields: borsh::schema::Fields::NamedFields(vec![(
+                "num_signatures".to_string(),
+                u8::declaration(),
+            )]),
+        };
+        Self::add_definition(
+            "VerificationLevel_Partial".to_string(),
+            definition,
+            definitions,
+        );
+
+        let definition = borsh::schema::Definition::Struct {
+            fields: borsh::schema::Fields::Empty,
+        };
+        Self::add_definition(
+            "VerificationLevel_Full".to_string(),
+            definition,
+            definitions,
+        );
+    }
+
+    fn declaration() -> borsh::schema::Declaration {
+        "VerificationLevel".to_string()
+    }
 }
 
 impl VerificationLevel {
@@ -57,10 +97,10 @@ impl VerificationLevel {
 #[account]
 #[derive(BorshSchema)]
 pub struct PriceUpdateV2 {
-    pub write_authority:    Pubkey,
+    pub write_authority: Pubkey,
     pub verification_level: VerificationLevel,
-    pub price_message:      PriceFeedMessage,
-    pub posted_slot:        u64,
+    pub price_message: PriceFeedMessage,
+    pub posted_slot: u64,
 }
 
 impl PriceUpdateV2 {
@@ -71,9 +111,9 @@ impl PriceUpdateV2 {
 /// The actual price is `(price ± conf)* 10^exponent`. `publish_time` may be used to check the recency of the price.
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub struct Price {
-    pub price:        i64,
-    pub conf:         u64,
-    pub exponent:     i32,
+    pub price: i64,
+    pub conf: u64,
+    pub exponent: i32,
     pub publish_time: i64,
 }
 
@@ -95,9 +135,9 @@ impl PriceUpdateV2 {
             GetPriceError::MismatchedFeedId
         );
         Ok(Price {
-            price:        self.price_message.price,
-            conf:         self.price_message.conf,
-            exponent:     self.price_message.exponent,
+            price: self.price_message.price,
+            conf: self.price_message.conf,
+            exponent: self.price_message.exponent,
             publish_time: self.price_message.publish_time,
         })
     }
@@ -124,7 +164,7 @@ impl PriceUpdateV2 {
     ///
     /// pub fn read_price_account(ctx : Context<ReadPriceAccount>) -> Result<()> {
     ///     let price_update = &mut ctx.accounts.price_update;
-    ///     let price = price_update.get_price_no_older_than_with_custom_verification_level(&Clock::get()?, MAXIMUM_AGE, &get_feed_id_from_hex(FEED_ID)?, VerificationLevel::Partial{num_signatures: 5})?;
+    ///     let price = price_update.get_price_no_older_than_with_custom_verification_level(&Clock::get()?, MAXIMUM_AGE, &get_feed_id_from_hex(FEED_ID)?, VerificationLevel::Partial { num_signatures: 5 })?;
     ///     Ok(())
     /// }
     ///```
@@ -217,19 +257,11 @@ pub mod tests {
     use {
         crate::{
             error::GetPriceError,
-            price_update::{
-                Price,
-                PriceUpdateV2,
-                VerificationLevel,
-            },
+            price_update::{Price, PriceUpdateV2, VerificationLevel},
         },
         anchor_lang::Discriminator,
         pythnet_sdk::messages::PriceFeedMessage,
-        solana_program::{
-            borsh0_10,
-            clock::Clock,
-            pubkey::Pubkey,
-        },
+        solana_program::{borsh0_10, clock::Clock, pubkey::Pubkey},
     };
 
     #[test]
@@ -244,7 +276,7 @@ pub mod tests {
     fn gte() {
         assert!(VerificationLevel::Full.gte(VerificationLevel::Full));
         assert!(VerificationLevel::Full.gte(VerificationLevel::Partial {
-            num_signatures: 255,
+            num_signatures: 255
         }));
         assert!(VerificationLevel::Partial { num_signatures: 8 }
             .gte(VerificationLevel::Partial { num_signatures: 8 }));
@@ -282,9 +314,9 @@ pub mod tests {
     #[test]
     fn get_price() {
         let expected_price = Price {
-            price:        1,
-            conf:         2,
-            exponent:     3,
+            price: 1,
+            conf: 2,
+            exponent: 3,
             publish_time: 900,
         };
 
@@ -296,9 +328,9 @@ pub mod tests {
         };
 
         let price_update_unverified = PriceUpdateV2 {
-            write_authority:    Pubkey::new_unique(),
+            write_authority: Pubkey::new_unique(),
             verification_level: VerificationLevel::Partial { num_signatures: 0 },
-            price_message:      PriceFeedMessage {
+            price_message: PriceFeedMessage {
                 feed_id,
                 ema_conf: 0,
                 ema_price: 0,
@@ -308,13 +340,13 @@ pub mod tests {
                 prev_publish_time: 899,
                 publish_time: 900,
             },
-            posted_slot:        0,
+            posted_slot: 0,
         };
 
         let price_update_partially_verified = PriceUpdateV2 {
-            write_authority:    Pubkey::new_unique(),
+            write_authority: Pubkey::new_unique(),
             verification_level: VerificationLevel::Partial { num_signatures: 5 },
-            price_message:      PriceFeedMessage {
+            price_message: PriceFeedMessage {
                 feed_id,
                 ema_conf: 0,
                 ema_price: 0,
@@ -324,13 +356,13 @@ pub mod tests {
                 prev_publish_time: 899,
                 publish_time: 900,
             },
-            posted_slot:        0,
+            posted_slot: 0,
         };
 
         let price_update_fully_verified = PriceUpdateV2 {
-            write_authority:    Pubkey::new_unique(),
+            write_authority: Pubkey::new_unique(),
             verification_level: VerificationLevel::Full,
-            price_message:      PriceFeedMessage {
+            price_message: PriceFeedMessage {
                 feed_id,
                 ema_conf: 0,
                 ema_price: 0,
@@ -340,9 +372,8 @@ pub mod tests {
                 prev_publish_time: 899,
                 publish_time: 900,
             },
-            posted_slot:        0,
+            posted_slot: 0,
         };
-
 
         assert_eq!(
             price_update_unverified.get_price_unchecked(&feed_id),
