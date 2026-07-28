@@ -2,7 +2,7 @@
 name    = "wormhole-stub"
 version = "0.1.0"
 authors = ["Pyth Data Association"]
-edition = "2021"
+edition = "2024"
 
 [lib]
 crate-type = ["cdylib"]

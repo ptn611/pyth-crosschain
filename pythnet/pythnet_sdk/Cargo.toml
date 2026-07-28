@@ -5,7 +5,7 @@ description = "Pyth Runtime for Solana"
 authors = ["Pyth Data Association"]
 repository = "https://github.com/pyth-network/pythnet"
 license = "Apache-2.0"
-edition = "2021"
+edition = "2024"
 
 [lib]
 crate-type = ["lib"]
@@ -32,7 +32,7 @@ serde_wormhole = {version ="0.1.0", optional = true}
 wormhole-vaas-serde = {version = "0.1.0", optional = true}
 libsecp256k1 = {version ="0.7.1", optional = true}
 rand = {version = "0.8.5", optional = true}
-solana-program = {version = ">=1.13.6", optional = true}
+solana-program = {version = ">=1.13.6, <2", optional = true}
 anchor-lang  = {version = "0.30", optional = true}
 proc-macro2 = {version = "1.0.79", optional = true}
 

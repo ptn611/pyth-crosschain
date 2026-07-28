@@ -331,5 +331,5 @@ pub fn deserialize_accumulator_update_data(
 }
 
 pub fn get_random_treasury_id() -> u8 {
-    rand::thread_rng().gen()
+    rand::thread_rng().r#gen()
 }
