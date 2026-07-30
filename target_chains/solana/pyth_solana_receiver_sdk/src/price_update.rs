@@ -1,8 +1,9 @@
 pub use pythnet_sdk::messages::{FeedId, PriceFeedMessage};
 use {
     crate::{check, error::GetPriceError},
-    anchor_lang::prelude::{borsh::BorshSchema, *},
-    solana_program::pubkey::Pubkey,
+    anchor_lang::prelude::*,
+    anchor_lang::solana_program::pubkey::Pubkey,
+    borsh::BorshSchema,
 };
 
 /// Pyth price updates are bridged to all blockchains via Wormhole.
@@ -16,60 +17,10 @@ use {
 ///
 /// # Warning
 /// Using partially verified price updates is dangerous, as it lowers the threshold of guardians that need to collude to produce a malicious price update.
-#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, BorshSchema, Copy, Clone, PartialEq, Debug)]
 pub enum VerificationLevel {
     Partial { num_signatures: u8 },
     Full,
-}
-
-impl BorshSchema for VerificationLevel {
-    fn add_definitions_recursively(
-        definitions: &mut std::collections::HashMap<
-            borsh::schema::Declaration,
-            borsh::schema::Definition,
-        >,
-    ) {
-        let variant_partial = (
-            "Partial".to_string(),
-            borsh::schema::Declaration::from("VerificationLevel_Partial"),
-        );
-        let variant_full = (
-            "Full".to_string(),
-            borsh::schema::Declaration::from("VerificationLevel_Full"),
-        );
-
-        <u8 as BorshSchema>::add_definitions_recursively(definitions);
-
-        let definition = borsh::schema::Definition::Enum {
-            variants: vec![variant_partial, variant_full],
-        };
-        Self::add_definition(Self::declaration(), definition, definitions);
-
-        let definition = borsh::schema::Definition::Struct {
-            fields: borsh::schema::Fields::NamedFields(vec![(
-                "num_signatures".to_string(),
-                u8::declaration(),
-            )]),
-        };
-        Self::add_definition(
-            "VerificationLevel_Partial".to_string(),
-            definition,
-            definitions,
-        );
-
-        let definition = borsh::schema::Definition::Struct {
-            fields: borsh::schema::Fields::Empty,
-        };
-        Self::add_definition(
-            "VerificationLevel_Full".to_string(),
-            definition,
-            definitions,
-        );
-    }
-
-    fn declaration() -> borsh::schema::Declaration {
-        "VerificationLevel".to_string()
-    }
 }
 
 impl VerificationLevel {
@@ -261,7 +212,7 @@ pub mod tests {
         },
         anchor_lang::Discriminator,
         pythnet_sdk::messages::PriceFeedMessage,
-        solana_program::{borsh0_10, clock::Clock, pubkey::Pubkey},
+        anchor_lang::solana_program::{borsh0_10, clock::Clock, pubkey::Pubkey},
     };
 
     #[test]

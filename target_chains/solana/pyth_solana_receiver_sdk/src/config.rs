@@ -1,6 +1,6 @@
 use {
     anchor_lang::prelude::*,
-    solana_program::pubkey::Pubkey,
+    anchor_lang::solana_program::pubkey::Pubkey,
 };
 
 #[account]
@@ -33,7 +33,7 @@ pub mod tests {
             AnchorSerialize,
             Discriminator,
         },
-        solana_program::pubkey::Pubkey,
+        anchor_lang::solana_program::pubkey::Pubkey,
     };
 
     #[test]

@@ -50,7 +50,7 @@ use {
         Chain,
         Vaa,
     },
-    solana_program::{pubkey, pubkey::Pubkey}
+    anchor_lang::solana_program::{pubkey, pubkey::Pubkey}
 };
 
 pub struct DataSource {
